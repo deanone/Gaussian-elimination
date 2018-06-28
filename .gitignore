@@ -1,0 +1,5 @@
+# Don't track the following type of files
+
+# Compiled source #
+###################
+*.out
