@@ -17,8 +17,6 @@ int main(int argc, char** argv)
 		return 1;	// error code
 	}
 
-
-
 	std::string arg1(argv[1]);
 	std::string arg2(argv[2]);
    std::string arg3(argv[3]);
