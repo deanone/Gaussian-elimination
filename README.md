@@ -14,3 +14,5 @@ arg2: Number of columns
 arg3: Lower bound of the random variables interval
 arg4: Upper bound of the random variables interval
 arg5: 1 for printing initial and final matrices, and 0 for not printing anything
+
+This project was added into a continuous integration (CI) pipeline.
