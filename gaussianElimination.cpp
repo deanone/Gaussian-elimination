@@ -4,6 +4,7 @@
 #include <random>
 #include <iomanip>
 
+// typedefs
 typedef std::vector<double> DoubleVector;
 typedef std::vector<DoubleVector> DoubleVector2D;
 
@@ -46,11 +47,15 @@ int main(int argc, char** argv)
    std::uniform_real_distribution<double> unif(lowerBound, upperBound);
    std::default_random_engine re;
 
-   if (printResults) std::cout << "Initial matrix:\nA =\n";
-   for (int i = 0; i < m; i++)
+   if (printResults)
+   {
+      std::cout << "Initial matrix:\nA =\n";
+   }
+
+   for (int i = 0; i < m; ++i)
    {
       DoubleVector Arow;
-   	for (int j = 0; j < n; j++)
+   	for (int j = 0; j < n; ++j)
    	{
    		double a_random_double = unif(re);
          if (printResults)
@@ -61,23 +66,31 @@ int main(int argc, char** argv)
          }
    		Arow.push_back(a_random_double);
    	}
-      if (printResults) std::cout << std::endl;
+      if (printResults)
+      {
+         std::cout << std::endl;
+      }
+
    	A.push_back(Arow);
    	Arow.clear();
    }
 
-   /* reduce to row echelon form */
-   /* This version of the Gaussian elimination algorithm uses partial pivoting (i.e. it chooses a pivot with the largest absolute value). */
-   /* This choice improves the numerical stability of the algorithm. */
+   // reduce to row echelon form
+   // This version of the Gaussian elimination algorithm uses partial pivoting 
+   // (i.e., it chooses a pivot with the largest absolute value).
+   // This choice improves the numerical stability of the algorithm.
+
    clock_t begin = clock();
+   
    int h = 0;
    int k = 0;
+
    while ((h < m) && (k < n))
    {
-   	/* Find the k-th pivot */
+   	// find the k-th pivot
    	int i_max = h;
    	double A_col_max = std::fabs(A[i_max][k]);
-   	for (int i = h + 1; i < m; i++)
+   	for (int i = (h + 1); i < m; ++i)
    	{
    		if (std::fabs(A[i][k]) > A_col_max)
    		{
@@ -88,41 +101,47 @@ int main(int argc, char** argv)
 
    	if (A[i_max][k] == 0.0)
    	{
-   		/* No pivot in this column, pass to next column */
+   		// no pivot in this column, pass to the next column
    		k++;
    	}
    	else
    	{
-   		/* Swap rows */
-   		for (int j = 0; j < n; j++)
+   		// swap rows
+   		for (int j = 0; j < n; ++j)
    		{
    		   double temp_val = A[h][j];
    			A[h][j] = A[i_max][j];
    			A[i_max][j] = temp_val;
    		}
 
-   		for (int i = h + 1; i < m; i++)
+   		for (int i = (h + 1); i < m; ++i)
    		{
    			double f = A[i][k] / A[h][k];
-   			/* Fill with zeros the lower part of pivot column: */
+   			
+            // fill with zeros the lower part of pivot column
    			A[i][k] = 0.0;
-   			/* Do for all remaining elements in current row: */
-   			for (int j = k + 1; j < n; j++)
+   			
+            // do for all remaining elements in current row
+   			for (int j = (k + 1); j < n; ++j)
+            {
    			   A[i][j] -= (A[h][j] * f);
+            }
    		}
    		h++;
    		k++;
    	}
    }
    clock_t end = clock();
+
    double elapsedTime = (double)(end - begin) / CLOCKS_PER_SEC;
 
    if (printResults)
    {
       std::cout << "\nRow echelon form of matrix:\nAref =\n";
-      for (int i = 0; i < m; i++)
+
+      for (int i = 0; i < m; ++i)
       {
-         for (int j = 0; j < n; j++)
+         for (int j = 0; j < n; ++j)
          {
             std::cout << std::fixed;
             std::cout << std::setprecision(2);
@@ -134,7 +153,12 @@ int main(int argc, char** argv)
 
    std::cout << std::fixed;
    std::cout << std::setprecision(4);
-   if (printResults) std::cout << "\n";
+   if (printResults)
+   {
+      std::cout << std::endl;
+   }
+
    std::cout << "Elapsed time: " << elapsedTime << " sec.\n";
+
 	return 0;
 }
