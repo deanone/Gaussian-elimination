@@ -8,6 +8,73 @@
 typedef std::vector<double> DoubleVector;
 typedef std::vector<DoubleVector> DoubleVector2D;
 
+void generateCoefficientMatrix(double lowerBound, double upperBound, int printResults, int m, int n, DoubleVector2D& A)
+{
+	std::uniform_real_distribution<double> unif(lowerBound, upperBound);
+	std::default_random_engine re;
+
+	if (printResults)
+	{
+		std::cout << "Coefficient matrix:\nA =\n";
+	}
+
+	for (int i = 0; i < m; ++i)
+	{
+		DoubleVector Arow;
+		for (int j = 0; j < n; ++j)
+		{
+			double aVal = unif(re);
+			if (printResults)
+			{
+				std::cout << std::fixed;
+				std::cout << std::setprecision(4);
+				std::cout << aVal << " ";
+			}
+			Arow.push_back(aVal);
+		}
+		if (printResults)
+		{
+			std::cout << std::endl;
+		}
+
+		A.push_back(Arow);
+		Arow.clear();
+	}
+
+	if (printResults)
+	{
+		std::cout << std::endl;
+	}
+}
+
+void generateRightHandSideVector(double lowerBound, double upperBound, int printResults, int m, DoubleVector& b)
+{
+	std::uniform_real_distribution<double> unif(lowerBound, upperBound);
+	std::default_random_engine re;
+
+	if (printResults)
+	{
+		std::cout << "Right-hand side vector:\nb =\n";
+	}
+
+	for (int i = 0; i < m; ++i)
+	{
+		double bVal = unif(re);
+		if (printResults)
+		{
+			std::cout << std::fixed;
+			std::cout << std::setprecision(4);
+			std::cout << bVal << " ";
+		}
+		b.push_back(bVal);
+	}
+
+	if (printResults)
+	{
+		std::cout << std::endl;
+	}
+}
+
 int main(int argc, char** argv)
 {
 	if (argc != 6)
@@ -42,64 +109,38 @@ int main(int argc, char** argv)
 		return 3;   // error code
 	}
 
-
+	// generate coefficient matrix
 	DoubleVector2D A;
-	std::uniform_real_distribution<double> unif(lowerBound, upperBound);
-	std::default_random_engine re;
+	generateCoefficientMatrix(lowerBound, upperBound, printResults, m, n, A);
 
-	if (printResults)
-	{
-		std::cout << "Initial matrix:\nA =\n";
-	}
+	// generate right-hand side vector
+	DoubleVector b;
+	generateRightHandSideVector(lowerBound, upperBound, printResults, m, b);
 
-	for (int i = 0; i < m; ++i)
-	{
-		DoubleVector Arow;
-		for (int j = 0; j < n; ++j)
-		{
-			double a_random_double = unif(re);
-			if (printResults)
-			{
-				std::cout << std::fixed;
-				std::cout << std::setprecision(2);
-				std::cout << a_random_double << " ";
-			}
-			Arow.push_back(a_random_double);
-		}
-		if (printResults)
-		{
-			std::cout << std::endl;
-		}
-
-		A.push_back(Arow);
-		Arow.clear();
-	}
-
-	// reduce to row echelon form
+	// reduce the coefficient matrix to row echelon form
 	// This version of the Gaussian elimination algorithm uses partial pivoting 
 	// (i.e., it chooses a pivot with the largest absolute value).
 	// This choice improves the numerical stability of the algorithm.
 
 	clock_t begin = clock();
-	
+	// forward elimination
 	int h = 0;
 	int k = 0;
-
 	while ((h < m) && (k < n))
 	{
 		// find the k-th pivot
-		int i_max = h;
-		double A_col_max = std::fabs(A[i_max][k]);
+		int iMax = h;
+		double AcolMax = std::fabs(A[iMax][k]);
 		for (int i = (h + 1); i < m; ++i)
 		{
-			if (std::fabs(A[i][k]) > A_col_max)
+			if (std::fabs(A[i][k]) > AcolMax)
 			{
-				A_col_max = std::fabs(A[i][k]);
-				i_max = i;
+				AcolMax = std::fabs(A[i][k]);
+				iMax = i;
 			}
 		}
 
-		if (A[i_max][k] == 0.0)
+		if (A[iMax][k] == 0.0)
 		{
 			// no pivot in this column, pass to the next column
 			k++;
@@ -109,10 +150,14 @@ int main(int argc, char** argv)
 			// swap rows
 			for (int j = 0; j < n; ++j)
 			{
-				double temp_val = A[h][j];
-				A[h][j] = A[i_max][j];
-				A[i_max][j] = temp_val;
+				double temp = A[h][j];
+				A[h][j] = A[iMax][j];
+				A[iMax][j] = temp;
 			}
+			double temp = b[h];
+			b[h] = b[iMax];
+			b[iMax] = temp;
+
 
 			for (int i = (h + 1); i < m; ++i)
 			{
@@ -126,28 +171,51 @@ int main(int argc, char** argv)
 				{
 					A[i][j] -= (A[h][j] * f);
 				}
+				b[i] -= (b[h] * f);
 			}
 			h++;
 			k++;
 		}
 	}
-	clock_t end = clock();
 
+	// backward substitution
+	DoubleVector x;
+	for (int j = 0; j < n; ++j)
+	{
+		x.push_back(0.0);
+	}
+	for (int i = (m - 1); i >= 0; --i)
+	{
+		double s = 0.0;
+		for (int j = (i + 1); j < n; ++j)
+		{
+			s += A[i][j] * x[j];
+		}
+		x[i] = (b[i] - s) / A[i][i];
+	}
+	clock_t end = clock();
 	double elapsedTime = (double)(end - begin) / CLOCKS_PER_SEC;
 
 	if (printResults)
 	{
-		std::cout << "\nRow echelon form of matrix:\nAref =\n";
-
+		std::cout << "\nRow echelon form of coefficient matrix:\nAref =\n";
 		for (int i = 0; i < m; ++i)
 		{
 			for (int j = 0; j < n; ++j)
 			{
 				std::cout << std::fixed;
-				std::cout << std::setprecision(2);
+				std::cout << std::setprecision(4);
 				std::cout << A[i][j] << " ";
 			}
 			std::cout << std::endl;
+		}
+
+		std::cout << "\nx =\n";
+		for (int j = 0; j < n; ++j)
+		{
+			std::cout << std::fixed;
+			std::cout << std::setprecision(4);
+			std::cout << x[j] << " ";
 		}
 	}
 
@@ -155,7 +223,7 @@ int main(int argc, char** argv)
 	std::cout << std::setprecision(4);
 	if (printResults)
 	{
-		std::cout << std::endl;
+		std::cout << "\n\n";
 	}
 
 	std::cout << "Elapsed time: " << elapsedTime << " sec.\n";
